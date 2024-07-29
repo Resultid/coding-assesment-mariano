@@ -1,0 +1,33 @@
+
+Assessment Instructions:
+
+TypeScript React Developer Assessment
+Duration: 4 hours
+This assessment consists of three parts:
+
+Code Review and Improvement (1.5 hours)
+Form Builder Implementation (2 hours)
+Communication Exercise (0.5 hours)
+
+Part 1: Code Review and Improvement (1.5 hours)
+You have been provided with a FormSubmitter component. Your tasks are:
+a) Review the code and document all issues you find. Explain why each issue is problematic.
+b) Refactor and improve the component, fixing the issues you identified.
+c) Write a brief explanation of your changes and any decisions you made during refactoring.
+
+Part 2: Form Builder Implementation (2 hours)
+Create a basic form builder component that:
+a) Allows adding and removing form fields
+b) Supports at least three field types (e.g., text, number, dropdown)
+c) Implements basic validation
+d) Integrates with your improved FormSubmitter component
+
+Part 3: Communication Exercise (0.5 hours)
+Write a brief technical document (250-300 words) explaining:
+a) The architecture of your form builder component
+b) Any challenges you faced and how you overcame them
+c) Suggestions for future improvements or features you would add given more time
+
+Submission:
+Please submit your code files and the technical document. Feel free to make any changes that you feel would enhance the code. All styling should be done in TailwindCSS. Ensure your code is well-commented and follows the Resultid coding standards.
+Good luck!
