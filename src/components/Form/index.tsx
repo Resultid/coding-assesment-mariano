@@ -1,22 +1,51 @@
 import React, { useState } from "react";
 import { sendForm } from "../../services/formService";
-
-interface FormData {
-  [key: string]: string;
-}
+import { FormField, FieldType } from "../../services/types";
+import FormBuilder from "../FormBuilder";
+import { formSchema } from "../../services/validations";
+import TrashIcon from "../../assets/icons/TrashIcon";
 
 const FormSubmitter: React.FC = () => {
   const [email, setEmail] = useState<string>("");
-  const [formData, setFormData] = useState<FormData>({ name: "", message: "" });
+  const [fields, setFields] = useState<FormField[]>([]);
   const [isSending, setIsSending] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSending(true);
     setError(null);
+    setFieldErrors({});
+
+    const formData = { email, fields };
+
+    //TODO:check validations!!
+    const result = formSchema.safeParse(formData);
+    if (!result.success) {
+      const errors: { [key: string]: string } = {};
+      result.error.errors.forEach((err) => {
+        if (err.path.length === 1 && err.path[0] === "email") {
+          setError(err.message);
+        } else {
+          const [index, field, ...rest] = err.path;
+          if (typeof index === "number" && field === "fields") {
+            errors[`${index}.${rest.join(".")}`] = err.message;
+          }
+        }
+      });
+      setFieldErrors(errors);
+      setIsSending(false);
+      return;
+    }
+
     try {
-      await sendForm(email, formData);
+      const formattedData = fields.reduce((acc, field) => {
+        acc[field.label] = field.value;
+        return acc;
+      }, {} as Record<string, string>);
+      console.log("Formatted data for submission:", formattedData);
+      await sendForm(email, formattedData);
       alert("Form submitted successfully!");
     } catch (err) {
       setError("An error occurred while submitting the form.");
@@ -25,11 +54,8 @@ const FormSubmitter: React.FC = () => {
     }
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+  const handleRemoveField = (id: string) => {
+    setFields(fields.filter((field) => field.id !== id));
   };
 
   return (
@@ -38,7 +64,7 @@ const FormSubmitter: React.FC = () => {
         <h1 className="text-3xl font-bold mb-8 text-center text-gray-800">
           Form Submission
         </h1>
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
             <label
               htmlFor="email"
@@ -53,49 +79,83 @@ const FormSubmitter: React.FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="Enter email address"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
+            {error && <div className="text-red-500 text-sm">{error}</div>}
           </div>
-          <div className="space-y-2">
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Name:
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              placeholder="Enter your name"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="space-y-2">
-            <label
-              htmlFor="message"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Message:
-            </label>
-            <textarea
-              id="message"
-              name="message"
-              value={formData.message}
-              onChange={handleInputChange}
-              placeholder="Enter your message"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-32 resize-none"
-            ></textarea>
-          </div>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {fields.map((field, index) => (
+            <div key={field.id} className="space-y-2">
+              <label
+                htmlFor={field.id}
+                className="block text-sm font-medium text-gray-700"
+              >
+                {field.label}
+              </label>
+
+              {field.type === FieldType.SELECT ? (
+                <div className="flex gap-2 items-center justify-center">
+                  <select
+                    id={field.id}
+                    value={field.value}
+                    onChange={(e) => {
+                      const newFields = fields.map((f) =>
+                        f.id === field.id ? { ...f, value: e.target.value } : f
+                      );
+                      setFields(newFields);
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  >
+                    {field.value.split(",").map((option, index) => (
+                      <option key={index} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                  <div
+                    onClick={() => handleRemoveField(field.id)}
+                    className="cursor-pointer"
+                  >
+                    <TrashIcon />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2 items-center justify-center">
+                  <input
+                    type={field.type}
+                    id={field.id}
+                    value={field.value}
+                    onChange={(e) => {
+                      const newFields = fields.map((f) =>
+                        f.id === field.id ? { ...f, value: e.target.value } : f
+                      );
+                      setFields(newFields);
+                    }}
+                    placeholder={field.placeholder}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
+                  <div
+                    onClick={() => handleRemoveField(field.id)}
+                    className="cursor-pointer"
+                  >
+                    <TrashIcon />
+                  </div>
+                </div>
+              )}
+
+              {fieldErrors[`${index}.value`] && (
+                <div className="text-red-500 text-sm">
+                  {fieldErrors[`${index}.value`]}
+                </div>
+              )}
+            </div>
+          ))}
+          <FormBuilder fields={fields} setFields={setFields} />
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition duration-300 ease-in-out text-lg font-semibold"
+            className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors duration-300"
             disabled={isSending}
           >
-            {isSending ? "Sending..." : "Submit Form"}
+            {isSending ? "Submitting..." : "Submit"}
           </button>
         </form>
       </div>
