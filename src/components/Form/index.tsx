@@ -5,13 +5,20 @@ import FormBuilder from "../FormBuilder";
 import { formSchema } from "../../services/validations";
 import TrashIcon from "../../assets/icons/TrashIcon";
 
+// FormSubmitter component
 const FormSubmitter: React.FC = () => {
+  // State for recipient email
   const [email, setEmail] = useState<string>("");
+  // State for form fields
   const [fields, setFields] = useState<FormField[]>([]);
+  // State to indicate if the form is being submitted
   const [isSending, setIsSending] = useState<boolean>(false);
+  // State for general error message
   const [error, setError] = useState<string | null>(null);
+  // State for field-specific error messages
   const [fieldErrors, setFieldErrors] = useState<{ [key: string]: string }>({});
 
+  // Function to handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSending(true);
@@ -20,7 +27,7 @@ const FormSubmitter: React.FC = () => {
 
     const formData = { email, fields };
 
-    //TODO:check validations!!
+    // Validate the form data
     const result = formSchema.safeParse(formData);
     if (!result.success) {
       const errors: { [key: string]: string } = {};
@@ -40,6 +47,7 @@ const FormSubmitter: React.FC = () => {
     }
 
     try {
+      // Format the data for submission
       const formattedData = fields.reduce((acc, field) => {
         acc[field.label] = field.value;
         return acc;
@@ -54,6 +62,7 @@ const FormSubmitter: React.FC = () => {
     }
   };
 
+  // Function to handle removing a field
   const handleRemoveField = (id: string) => {
     setFields(fields.filter((field) => field.id !== id));
   };
@@ -66,6 +75,7 @@ const FormSubmitter: React.FC = () => {
         </h1>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="space-y-2">
+            {/* Input for the recipient email */}
             <label
               htmlFor="email"
               className="block text-sm font-medium text-gray-700"
@@ -83,6 +93,7 @@ const FormSubmitter: React.FC = () => {
             />
             {error && <div className="text-red-500 text-sm">{error}</div>}
           </div>
+          {/* Loop to render form fields */}
           {fields.map((field, index) => (
             <div key={field.id} className="space-y-2">
               <label
@@ -91,8 +102,8 @@ const FormSubmitter: React.FC = () => {
               >
                 {field.label}
               </label>
-
               {field.type === FieldType.SELECT ? (
+                // Render a select input if the field type is 'SELECT'
                 <div className="flex gap-2 items-center justify-center">
                   <select
                     id={field.id}
@@ -119,6 +130,7 @@ const FormSubmitter: React.FC = () => {
                   </div>
                 </div>
               ) : (
+                // Render a text/number input for other field types
                 <div className="flex gap-2 items-center justify-center">
                   <input
                     type={field.type}
@@ -141,7 +153,6 @@ const FormSubmitter: React.FC = () => {
                   </div>
                 </div>
               )}
-
               {fieldErrors[`${index}.value`] && (
                 <div className="text-red-500 text-sm">
                   {fieldErrors[`${index}.value`]}
@@ -149,6 +160,7 @@ const FormSubmitter: React.FC = () => {
               )}
             </div>
           ))}
+          {/* FormBuilder component to add new fields */}
           <FormBuilder fields={fields} setFields={setFields} />
           <button
             type="submit"
