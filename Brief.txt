@@ -1,0 +1,34 @@
+Having reviewed the code, I found the following:
+- Tailwind and axios where not installed.
+- The original code contained the form submission logic directly within the FormSubmitter component
+- Also it used 'any' type for state variables (email, formData, and IsSending), which defeats the purpose of TypeScript.
+- State variables were not properly typed, leading to potential runtime errors and reducing code readability.
+- Unspecified type on useState and untyped formData object.
+- try-catch without proper async handling.
+
+To improve readability and make the code more scalable i did the following:
+- Moved the form submission logic to a formService.ts file.
+- Explicitly typed state variables using TypeScript.
+- Correct data types are enforced, preventing runtime errors that could appear due to types mismatching.
+- Typed the formData state with FormData interface and updated input handlers.
+- Clear State Management. This ensures correct update and management of the states.
+
+Why this was done:
+- Separations of concerns. This separates UI from business logic, making code more modular. It also makes the code reusable across multiple components, as well as it helps testability.
+- Type safety. Helps also with readability – it makes the code clearer and easy to maintain.
+
+
+-----
+FormBuilder architecture
+
+The component allows you to add inputs to a form. These can be text, number or select.
+I declared state variables: showModal, newField, options, newOptions, to handle the possible states within the component.
+
+The main functionalities are handled by functions, such as handleAddField, handleTypeChange, handleOptionChange and addOption. These, as declared in their name, handle each function separately.
+
+
+-----
+I did not encounter a greater challenge than reading, understanding and trying to improve the code provided.
+-----
+
+
